@@ -33,11 +33,11 @@ class COVIDDataset(data.Dataset):
         image = self.rgb_loader(self.images[index])
         gt = self.binary_loader(self.gts[index])
 
-        # 将图片进行旋转、翻转、随机裁剪并恢复原本大小
-        # a = enhancement.Augmentation()
-        # image, gt = a.rotate(image, gt)
-        # image, gt = a.flip(image, gt)
-        # 中心裁剪(不恢复原本大小)
+
+        a = enhancement.Augmentation()
+        image, gt = a.rotate(image, gt)
+        image, gt = a.flip(image, gt)
+
         # image, gt = a.randomResizeCrop(image, gt)
         # image, gt = a.centerCrop(image, gt)
 

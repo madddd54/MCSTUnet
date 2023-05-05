@@ -65,7 +65,7 @@ class MCST(nn.Module):
 
         self.branchST = nn.Sequential(
             BasicConv2d(in_channel, out_channel, 1),
-            SwinTransformerSys(self, img_size, in_chans=out_channel, embed_dim=out_channel, num_classes=out_channel, depths=[2],
+            SwinTransformerSys(img_size, in_chans=out_channel, embed_dim=out_channel, num_classes=out_channel, depths=[2],
                                num_heads=num_heads),
             # BasicConv2d(in_channel, out_channel, 1),
         )

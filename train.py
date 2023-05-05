@@ -43,8 +43,8 @@ def structure_loss(pred, mask):
 
 def train(train_loader, model, optimizer, epoch, train_save):
     model.train()
-    size_rates = [0.75, 1, 1.25]
-    # size_rates = [1]
+#     size_rates = [0.75, 1, 1.25]
+    size_rates = [1]
     # loss_record1, loss_record2, loss_record3, loss_record4 = AvgMeter(), AvgMeter(), AvgMeter(), AvgMeter()
     loss_record = AvgMeter()
     for i, pack in enumerate(train_loader, start=1):

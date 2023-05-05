@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from module.backbone.ResNet import ResNet
 import torchvision.models as models
 import torch.nn.functional as F
@@ -49,7 +50,7 @@ class BasicConv2d(nn.Module):
         return x
 
 class MCST(nn.Module):
-    def __init__(self, in_channel, out_channel, img_size, num_heads):
+    def __init__(self, in_channel, out_channel, img_size, num_heads, window_size):
         super(MCST, self).__init__()
         self.relu = nn.ReLU(True)
         self.branchRB = nn.Sequential(
@@ -66,18 +67,19 @@ class MCST(nn.Module):
         self.branchST = nn.Sequential(
             BasicConv2d(in_channel, out_channel, 1),
             SwinTransformerSys(img_size, in_chans=out_channel, embed_dim=out_channel, num_classes=out_channel, depths=[2],
-                               num_heads=num_heads),
+                               num_heads=num_heads, window_size=window_size),
             # BasicConv2d(in_channel, out_channel, 1),
         )
 
         self.conv_cat = BasicConv2d(3 * out_channel, out_channel, 3, padding=1)
         self.conv1x1 = BasicConv2d(in_channel, out_channel, 1)
-        self.conv3x3 = BasicConv2d(in_channel, out_channel, 3)
+        self.conv3x3 = BasicConv2d(out_channel, out_channel, 3, padding=1)
 
     def  forward(self, x):
         rb = self.branchRB(x)
         hdc = self.branchHDC(x)
         st = self.branchST(x)
+
         x_cat = self.conv_cat(torch.cat((rb, hdc, st), 1))
         x = self.conv3x3(x_cat)
         x = self.relu(x)
@@ -86,19 +88,19 @@ class MCST(nn.Module):
 class MAF(nn.Module):
     def __init__(self, channels_high, channels_low):
         super(MAF, self).__init__()
-        self.deConv = nn.ConvTranspose2d(channels_high, channels_high, 2, stride=2)
+        self.deConv = nn.ConvTranspose2d(channels_high, channels_low, 2, stride=2)
 
         self.ChannelGate = ChannelGate(channels_high)
         self.SpatialGate = SpatialGate()
 
         self.relu = nn.ReLU(inplace=True)
         self.conv1 = conv1x1(channels_high, channels_low)
-        self.conv2 = conv3x3(channels_high, channels_low)
+        self.conv2 = conv3x3(channels_low, channels_low)
 
 
     def forward(self, fms_high, fms_low):
-        x1 = self.deConv(fms_high)
 
+        x1 = self.deConv(fms_high)
         x2 = self.ChannelGate(fms_high)
         x2 = self.deConv(x2)
         x2 = self.SpatialGate(x2)
@@ -148,10 +150,10 @@ class mcst_unet(nn.Module):
         self.resnet = ResNet()
         # ---- Receptive Field Block like module ----
 
-        self.mcst1 = MCST(256, 128, 96, [3])
-        self.mcst2 = MCST(512, 256, 48, [6])
-        self.mcst3 = MCST(1024, 512, 24, [12])
-        self.mcst4 = MCST(2048, 1024, 12, [24])
+        self.mcst1 = MCST(256, 128, 96, [4], 6)
+        self.mcst2 = MCST(512, 256, 48, [8], 6)
+        self.mcst3 = MCST(1024, 512, 24, [16], 6)
+        self.mcst4 = MCST(2048, 1024, 12, [32], 4)
 
         bottom_ch = 1024
         self.maf3 = MAF(bottom_ch, 512)
@@ -203,5 +205,3 @@ class mcst_unet(nn.Module):
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict)
         self.resnet.load_state_dict(model_dict)
-
-

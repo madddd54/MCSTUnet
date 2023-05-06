@@ -19,12 +19,12 @@ def inference() -> object:
     # test set
     parser.add_argument('--test_set', type=str, default=['cor-384'], help='test sets')
     # parser.add_argument('--test_set', type=str, default=['Cor-s'], help='test sets')
-    parser.add_argument('--train_set', type=str, default='_cor_80', help='train set, choice: mos, Cor, 100')
+    parser.add_argument('--train_set', type=str, default='_cor_100', help='train set, choice: mos, Cor, 100')
     parser.add_argument('--data_path', type=str, default='../datasets/test/',
                         help='Path to test data')
     # parser.add_argument('--pth_path', type=str, default='./weight/result/myModel_with_transform_best.pth',
     #                     help='Path to weights file')
-    parser.add_argument('--pth_path', type=str, default='./weight/cor/cdcnet-cor384-t80.pth',
+    parser.add_argument('--pth_path', type=str, default='./weight/cor/mcst_net-cor384-100.pth',
                         help='Path to weights file')
     parser.add_argument('--mod', type=str, default='mcst_unet', help='test model')
     parser.add_argument('--save_path', type=str, default='./Results/',
